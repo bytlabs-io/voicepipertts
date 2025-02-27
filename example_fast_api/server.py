@@ -1,5 +1,7 @@
 import argparse
 import os
+import nest_asyncio
+from pyngrok import ngrok
 
 parser = argparse.ArgumentParser(description="Run the TTS FastAPI server.")
 parser.add_argument("-p", "--port", type=int, default=int(os.environ.get("TTS_FASTAPI_PORT", 8000)),
@@ -44,10 +46,10 @@ import wave
 import io
 
 SUPPORTED_ENGINES = [
-    "azure",
-    "openai",
-    "elevenlabs",
-    "system",
+    # "azure",
+    # "openai",
+    # "elevenlabs",
+    # "system",
     "coqui",  # comment coqui out for tests where you need server start often
 ]
 
@@ -88,7 +90,7 @@ tts_lock = threading.Lock()
 gen_lock = threading.Lock()
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="/content/voicepipertts/example_fast_api/static"), name="static")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -118,7 +120,7 @@ async def add_security_headers(request: Request, call_next):
 
 @app.get("/favicon.ico")
 async def favicon():
-    return FileResponse("static/favicon.ico")
+    return FileResponse("/content/voicepipertts/example_fast_api/static/favicon.ico")
 
 
 def _set_engine(engine_name):
@@ -415,8 +417,7 @@ if __name__ == "__main__":
 
         if "coqui" == engine_name:
             print("Initializing coqui engine")
-            engines["coqui"] = CoquiEngine()
-
+            engines["coqui"] = CoquiEngine(local_models_path="/content/asante-twi")
         if "openai" == engine_name:
             print("Initializing openai engine")
             engines["openai"] = OpenAIEngine()
@@ -431,6 +432,11 @@ if __name__ == "__main__":
             logging.error(f"Error retrieving voices for {_engine}: {str(e)}")
 
     _set_engine(START_ENGINE)
+
+    ngrok_tunnel = ngrok.connect(8000)
+    print('Public URL:', ngrok_tunnel.public_url)
+    nest_asyncio.apply()
+
 
     print("Server ready")
     uvicorn.run(app, host="0.0.0.0", port=PORT)

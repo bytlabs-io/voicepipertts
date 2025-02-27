@@ -1,3 +1,4 @@
+from TTS.utils.synthesizer import Synthesizer
 from .base_engine import BaseEngine
 import torch.multiprocessing as mp
 from threading import Lock, Thread
@@ -513,12 +514,14 @@ class CoquiEngine(BaseEngine):
             """Post process the output waveform"""
             if isinstance(chunk, list):
                 chunk = torch.cat(chunk, dim=0)
+            elif isinstance(chunk, np.ndarray):
+                chunk = torch.from_numpy(chunk)
+
             chunk = chunk.clone().detach().cpu().numpy()
             chunk = chunk[None, : int(chunk.shape[0])]
             chunk = np.clip(chunk, -1, 1)
             chunk = chunk.astype(np.float32)
             return chunk
-
         def load_model(checkpoint, tts):
             global config
             try:
@@ -626,6 +629,7 @@ class CoquiEngine(BaseEngine):
                 split_sentences=split_sentences,
                 **kwargs,
             )
+            full_wav = np.array(full_wav)
             
             # Determine the total length of the waveform.
             total_length = full_wav.shape[-1]
@@ -675,7 +679,7 @@ class CoquiEngine(BaseEngine):
         try:
             checkpoint = local_model_path
             logging.debug(f" - checkpoint {checkpoint}")
-            tts = load_model(checkpoint, tts)
+            tts = load_model("/content/asante-twi", tts)
 
             # gpt_cond_latent, speaker_embedding = get_conditioning_latents(
             #     cloning_reference_wav, tts
@@ -821,7 +825,7 @@ class CoquiEngine(BaseEngine):
                             print(f"Raw Inference Factor: {raw_inference_factor}")
 
                     # Send silent audio
-                    sample_rate = config.audio.sample_rate
+                    sample_rate = tts.output_sample_rate
 
                     end_sentence_delimeters = ".!?…。¡¿"
                     mid_sentence_delimeters = ";:,\n()[]{}-“”„”—/|《》"

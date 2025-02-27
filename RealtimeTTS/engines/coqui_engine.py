@@ -679,7 +679,7 @@ class CoquiEngine(BaseEngine):
         try:
             checkpoint = local_model_path
             logging.debug(f" - checkpoint {checkpoint}")
-            tts = load_model("/content/asante-twi", tts)
+            tts = load_model("/kaggle/working/asante-twi", tts)
 
             # gpt_cond_latent, speaker_embedding = get_conditioning_latents(
             #     cloning_reference_wav, tts

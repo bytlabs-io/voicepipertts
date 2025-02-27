@@ -749,11 +749,11 @@ class CoquiEngine(BaseEngine):
                         tts,
                         text,
                         language,
-                        speaker_name,
-                        stream_chunk_size=stream_chunk_size,
-                        overlap_wav_len=overlap_wav_len,
-                        speaker_wav,
-                        split_sentences=split_sentences
+                        # speaker_name,
+                        # stream_chunk_size=stream_chunk_size,
+                        # overlap_wav_len=overlap_wav_len,
+                        # speaker_wav,
+                        split_sentences=True
                     )
 
                     if full_sentences:

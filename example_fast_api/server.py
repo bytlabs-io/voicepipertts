@@ -417,7 +417,7 @@ if __name__ == "__main__":
 
         if "coqui" == engine_name:
             print("Initializing coqui engine")
-            engines["coqui"] = CoquiEngine(local_models_path="/kaggle/working/asante-twi")
+            engines["coqui"] = CoquiEngine(local_models_path="/kaggle/working/asante-twi/")
         if "openai" == engine_name:
             print("Initializing openai engine")
             engines["openai"] = OpenAIEngine()

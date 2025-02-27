@@ -52,12 +52,12 @@ class CoquiVoice:
 class CoquiEngine(BaseEngine):
     def __init__(
         self,
-        model_name="tts_models/multilingual/multi-dataset/xtts_v2",
-        specific_model="v2.0.2",
+        model_name="tts_models/tw_asante/openbible/vits",
+        specific_model=None,
         local_models_path=None,
         voices_path=None,
         voice: Union[str, List[str]] = "",
-        language="en",
+        language="tw_asante",
         speed=1.0,
         thread_count=6,
         stream_chunk_size=20,
@@ -202,10 +202,10 @@ class CoquiEngine(BaseEngine):
         if not self.specific_model:
             from TTS.utils.manage import ModelManager
 
-            logging.info("Download most recent XTTS Model if available")
+            logging.info("Download most recent Model if available")
             ModelManager().download_model(model_name)
         else:
-            logging.info(f'Local XTTS Model: "{specific_model}" specified')
+            logging.info(f'Local Model: "{specific_model}" specified')
             self.model_path = self.download_model(
                 specific_model, self.local_models_path
             )
@@ -344,10 +344,8 @@ class CoquiEngine(BaseEngine):
         sys.stdout = QueueWriter(output_queue)
         sys.stderr = QueueWriter(output_queue)
 
-        from TTS.config import load_config
-        from TTS.tts.models import setup_model as setup_tts_model
-        from TTS.tts.layers.xtts.xtts_manager import SpeakerManager
-
+        from TTS.tts.utils.speakers import SpeakerManager
+        
         tts = None
 
         logging.basicConfig(format="CoquiEngine: %(message)s", level=loglevel)
@@ -552,23 +550,100 @@ class CoquiEngine(BaseEngine):
                     else "cpu"
                 )
 
-                config = load_config((os.path.join(checkpoint, "config.json")))
-                tts = setup_tts_model(config)
-                logging.debug(f"  xtts load_checkpoint({checkpoint})")
-
-                tts.load_checkpoint(
-                    config,
-                    checkpoint_dir=checkpoint,
-                    checkpoint_path=None,
-                    vocab_path=None,
-                    eval=True,
-                    use_deepspeed=use_deepspeed,
+                model_path = os.path.join(checkpoint, "model.pth")
+                config_path = os.path.join(checkpoint, "config.json")
+                
+                tts = Synthesizer(
+                    tts_checkpoint=model_path,
+                    tts_config_path=config_path,
+                    tts_speakers_file=None,
+                    tts_languages_file=None,
+                    vocoder_checkpoint=None,
+                    vocoder_config=None,
+                    encoder_checkpoint=None,
+                    encoder_config=None,
+                    use_cuda=True,
                 )
-                tts.to(torch_device)
+                
+                logging.debug(f" load_checkpoint({checkpoint})")
             except Exception as e:
                 print(f"Error loading model for checkpoint {checkpoint}: {e}")
                 raise
             return tts
+
+
+        def tts_stream(
+            tts,
+            text: str,
+            speaker: str | None = None,
+            language: str | None = None,
+            speaker_wav: str | None = None,
+            emotion: str | None = None,
+            split_sentences: bool = True,
+            stream_chunk_size: int = 16000,
+            overlap_wav_len: int = 0,
+            **kwargs,
+        ):
+            """
+            Convert text to speech and stream the resulting waveform as audio chunks.
+            
+            This wrapper first synthesizes the full waveform by calling the existing `tts` method.
+            It then iterates over the waveform and yields chunks of `stream_chunk_size` samples.
+            If an overlap length is provided, subsequent chunks will overlap by that many samples.
+            
+            Args:
+                text (str):
+                    Input text to synthesize.
+                speaker (str, optional):
+                    Speaker name for multi-speaker synthesis.
+                language (str, optional):
+                    Language for the text. If None, the default language for the speaker is used.
+                speaker_wav (str, optional):
+                    Path to a reference wav file for voice cloning.
+                emotion (str, optional):
+                    Emotion to be used in synthesis.
+                split_sentences (bool, optional):
+                    Whether to split the input text into sentences and synthesize them separately.
+                stream_chunk_size (int):
+                    Number of audio samples per chunk.
+                overlap_wav_len (int):
+                    Number of samples to overlap between consecutive chunks.
+                **kwargs:
+                    Additional arguments to pass to the `tts` method.
+            
+            Yields:
+                Audio chunk (Tensor or numpy array):
+                    A chunk of the synthesized waveform. The final chunk may be shorter than
+                    `stream_chunk_size` if the total length isn't an exact multiple.
+            """
+            # Synthesize the full waveform using the existing tts method.
+            full_wav = tts.tts(
+                text=text,
+                speaker=speaker,
+                language=language,
+                speaker_wav=speaker_wav,
+                emotion=emotion,
+                split_sentences=split_sentences,
+                **kwargs,
+            )
+            
+            # Determine the total length of the waveform.
+            total_length = full_wav.shape[-1]
+            start = 0
+        
+            # Iterate over the waveform and yield successive chunks.
+            while start < total_length:
+                end = start + stream_chunk_size
+                # Slice out the current chunk.
+                chunk = full_wav[..., start:end]
+                yield chunk
+        
+                # Advance the start index. If overlap is desired, subtract overlap length.
+                if overlap_wav_len > 0:
+                    start += (stream_chunk_size - overlap_wav_len)
+                else:
+                    start += stream_chunk_size
+
 
         def get_user_data_dir(appname):
             TTS_HOME = os.environ.get("TTS_HOME")
@@ -595,20 +670,16 @@ class CoquiEngine(BaseEngine):
         logging.debug(f"Initializing coqui model {model_name}")
         logging.debug(f" - cloning reference {cloning_reference_wav}")
         logging.debug(f" - language {language}")
-        logging.debug(f" - user data dir {get_user_data_dir('tts')}")
         logging.debug(f" - local model path {local_model_path}")
 
         try:
-            path_tts = os.path.join(
-                get_user_data_dir("tts"), model_name.replace("/", "--")
-            )
-            checkpoint = local_model_path if local_model_path else path_tts
+            checkpoint = local_model_path
             logging.debug(f" - checkpoint {checkpoint}")
             tts = load_model(checkpoint, tts)
 
-            gpt_cond_latent, speaker_embedding = get_conditioning_latents(
-                cloning_reference_wav, tts
-            )
+            # gpt_cond_latent, speaker_embedding = get_conditioning_latents(
+            #     cloning_reference_wav, tts
+            # )
 
         except Exception as e:
             logging.exception(f"Error initializing main coqui engine model: {e}")
@@ -642,9 +713,9 @@ class CoquiEngine(BaseEngine):
                 if command == "update_reference":
                     new_wav_path = data["cloning_reference_wav"]
                     logging.info(f"Updating reference WAV to {new_wav_path}")
-                    gpt_cond_latent, speaker_embedding = get_conditioning_latents(
-                        new_wav_path, tts
-                    )
+                    # gpt_cond_latent, speaker_embedding = get_conditioning_latents(
+                    #     new_wav_path, tts
+                    # )
                     conn.send(("success", "Reference updated successfully"))
 
                 elif command == "set_speed":
@@ -674,20 +745,15 @@ class CoquiEngine(BaseEngine):
                     raw_inference_start = 0.0
                     first_chunk_length_seconds = 0.0
 
-                    chunks = tts.inference_stream(
+                    chunks = tts_stream(
+                        tts,
                         text,
                         language,
-                        gpt_cond_latent,
-                        speaker_embedding,
+                        speaker_name,
                         stream_chunk_size=stream_chunk_size,
                         overlap_wav_len=overlap_wav_len,
-                        temperature=temperature,
-                        length_penalty=length_penalty,
-                        repetition_penalty=repetition_penalty,
-                        top_k=top_k,
-                        top_p=top_p,
-                        speed=speed,
-                        enable_text_splitting=enable_text_splitting,
+                        speaker_wav,
+                        split_sentences=split_sentences
                     )
 
                     if full_sentences:
@@ -1096,27 +1162,5 @@ class CoquiEngine(BaseEngine):
         """
         Retrieves the installed voices available for the Coqui TTS engine.
         """
-
-        if self.pretrained:
-            return self.voices_list
-
-        from TTS.tts.layers.xtts.xtts_manager import SpeakerManager
-
-        if self.local_models_path:
-            local_models_path = self.local_models_path
-        else:
-            local_models_path = os.path.join(
-                os.getcwd(), "models", f"{self.specific_model}"
-            )
-
-        speaker_file_path = os.path.join(local_models_path, "speakers_xtts.pth")
-        if not os.path.exists(speaker_file_path):
-            speaker_file_path = os.path.join(
-                local_models_path, self.specific_model, "speakers_xtts.pth"
-            )
-
-        speaker_manager = SpeakerManager(speaker_file_path)
         self.voices_list = []
-        for speaker_name in speaker_manager.name_to_id:
-            self.voices_list.append(speaker_name)
         return self.voices_list

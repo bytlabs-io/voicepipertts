@@ -200,16 +200,16 @@ class CoquiEngine(BaseEngine):
 
         # download coqui model
         self.model_path = None
-        if not self.specific_model:
-            from TTS.utils.manage import ModelManager
+        # if not self.specific_model:
+        #     from TTS.utils.manage import ModelManager
 
-            logging.info("Download most recent Model if available")
-            ModelManager().download_model(model_name)
-        else:
-            logging.info(f'Local Model: "{specific_model}" specified')
-            self.model_path = self.download_model(
-                specific_model, self.local_models_path
-            )
+        #     logging.info("Download most recent Model if available")
+        #     ModelManager().download_model(model_name)
+        # else:
+        #     logging.info(f'Local Model: "{specific_model}" specified')
+        #     self.model_path = self.download_model(
+        #         specific_model, self.local_models_path
+        #     )
 
         # Start the worker process
         try:

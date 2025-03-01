@@ -88,7 +88,7 @@ tts_lock = threading.Lock()
 gen_lock = threading.Lock()
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="/kaggle/working/voicepipertts/example_fast_api/static"), name="static")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -118,7 +118,7 @@ async def add_security_headers(request: Request, call_next):
 
 @app.get("/favicon.ico")
 async def favicon():
-    return FileResponse("static/favicon.ico")
+    return FileResponse("/kaggle/working/voicepipertts/example_fast_api/static/favicon.ico")
 
 
 def _set_engine(engine_name):

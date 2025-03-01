@@ -553,7 +553,7 @@ class CoquiEngine(BaseEngine):
                     else "cpu"
                 )
 
-                model_path = os.path.join(checkpoint, "checkpoint_1030000.pth")
+                model_path = "/kaggle/working/vits-akan/model.pth"
                 config_path = os.path.join(checkpoint, "config.json")
                 tts_speakers_file = os.path.join(checkpoint, "speakers.pth")
                 

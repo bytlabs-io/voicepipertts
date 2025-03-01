@@ -623,7 +623,7 @@ class CoquiEngine(BaseEngine):
             # Synthesize the full waveform using the existing tts method.
             full_wav = tts.tts(
                 text=text,
-                speaker=speaker,
+                speaker="17",
                 speaker_idx="17",
                 language=language,
                 speaker_wav=speaker_wav,

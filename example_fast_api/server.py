@@ -39,6 +39,7 @@ from fastapi.staticfiles import StaticFiles
 from queue import Queue
 import threading
 import logging
+import torch
 import uvicorn
 import wave
 import io

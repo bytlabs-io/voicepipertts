@@ -1,5 +1,8 @@
 import argparse
 import os
+import nest_asyncio
+from pyngrok import ngrok
+
 
 parser = argparse.ArgumentParser(description="Run the TTS FastAPI server.")
 parser.add_argument("-p", "--port", type=int, default=int(os.environ.get("TTS_FASTAPI_PORT", 8000)),
@@ -432,6 +435,11 @@ if __name__ == "__main__":
             logging.error(f"Error retrieving voices for {_engine}: {str(e)}")
 
     _set_engine(START_ENGINE)
+
+    ngrok_tunnel = ngrok.connect(8000)
+    print('Public URL:', ngrok_tunnel.public_url)
+    nest_asyncio.apply()
+
 
     print("Server ready")
     uvicorn.run(app, host="0.0.0.0", port=PORT)

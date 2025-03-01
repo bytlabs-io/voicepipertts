@@ -553,18 +553,19 @@ class CoquiEngine(BaseEngine):
                     else "cpu"
                 )
 
-                model_path = os.path.join(checkpoint, "model.pth")
+                model_path = os.path.join(checkpoint, "checkpoint_1030000.pth")
                 config_path = os.path.join(checkpoint, "config.json")
+                tts_speakers_file = os.path.join(checkpoint, "speakers.pth")
                 
                 tts = Synthesizer(
                     tts_checkpoint=model_path,
                     tts_config_path=config_path,
-                    tts_speakers_file=None,
-                    tts_languages_file=None,
-                    vocoder_checkpoint=None,
-                    vocoder_config=None,
-                    encoder_checkpoint=None,
-                    encoder_config=None,
+                    tts_speakers_file=tts_speakers_file,
+                    # tts_languages_file=None,
+                    # vocoder_checkpoint=None,
+                    # vocoder_config=None,
+                    # encoder_checkpoint=None,
+                    # encoder_config=None,
                     use_cuda=True,
                 )
                 
@@ -679,7 +680,7 @@ class CoquiEngine(BaseEngine):
         try:
             checkpoint = local_model_path
             logging.debug(f" - checkpoint {checkpoint}")
-            tts = load_model("/kaggle/working/asante-twi", tts)
+            tts = load_model("/kaggle/working/vits-akan", tts)
 
             # gpt_cond_latent, speaker_embedding = get_conditioning_latents(
             #     cloning_reference_wav, tts

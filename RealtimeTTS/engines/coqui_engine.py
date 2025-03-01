@@ -626,7 +626,7 @@ class CoquiEngine(BaseEngine):
                 speaker="17",
                 speaker_idx="17",
                 language=language,
-                speaker_wav=speaker_wav,
+                speaker_wav="/kaggle/input/testsp/speaker.wav",
                 emotion=emotion,
                 split_sentences=split_sentences,
                 **kwargs,

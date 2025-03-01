@@ -626,6 +626,7 @@ class CoquiEngine(BaseEngine):
                 speaker=speaker,
                 language=language,
                 speaker_wav=speaker_wav,
+                speaker="17",
                 emotion=emotion,
                 split_sentences=split_sentences,
                 **kwargs,

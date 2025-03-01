@@ -44,10 +44,10 @@ import wave
 import io
 
 SUPPORTED_ENGINES = [
-    "azure",
-    "openai",
-    "elevenlabs",
-    "system",
+    # "azure", 
+    # "openai",
+    # "elevenlabs",
+    # "system",
     "coqui",  # comment coqui out for tests where you need server start often
 ]
 

@@ -623,7 +623,7 @@ class CoquiEngine(BaseEngine):
             # Synthesize the full waveform using the existing tts method.
             full_wav = tts.tts(
                 text=text,
-                speaker=speaker,
+                speaker="17",
                 language=language,
                 speaker_wav=speaker_wav,
                 emotion=emotion,
@@ -754,7 +754,7 @@ class CoquiEngine(BaseEngine):
                         tts,
                         text,
                         language,
-                        speaker="17",
+                        # speaker="17",
                         # speaker_name,
                         # stream_chunk_size=stream_chunk_size,
                         # overlap_wav_len=overlap_wav_len,

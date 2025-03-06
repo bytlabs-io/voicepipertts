@@ -435,9 +435,10 @@ if __name__ == "__main__":
             logging.error(f"Error retrieving voices for {_engine}: {str(e)}")
 
     _set_engine(START_ENGINE)
+    print("after engine set")
 
     ngrok_tunnel = ngrok.connect(PORT)
-    print('TTS Server:', ngrok_tunnel.public_url)
+    print('TTS Server Public URL:', ngrok_tunnel.public_url)
     nest_asyncio.apply()
 
 

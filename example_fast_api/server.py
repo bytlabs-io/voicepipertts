@@ -399,6 +399,10 @@ def root_page():
 if __name__ == "__main__":
     print("Initializing TTS Engines")
 
+    ngrok_tunnel = ngrok.connect(PORT)
+    print('TTS Server Public URL:', ngrok_tunnel.public_url)
+    print("Server ready")
+
     for engine_name in SUPPORTED_ENGINES:
         if "azure" == engine_name:
             azure_api_key = os.environ.get("AZURE_SPEECH_KEY")
@@ -437,9 +441,6 @@ if __name__ == "__main__":
     _set_engine(START_ENGINE)
     nest_asyncio.apply()
 
-    ngrok_tunnel = ngrok.connect(PORT)
-    print('TTS Server Public URL:', ngrok_tunnel.public_url)
-    print("Server ready")
     uvicorn.run(app, host="0.0.0.0", port=PORT)
 
 

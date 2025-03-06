@@ -438,8 +438,8 @@ if __name__ == "__main__":
     nest_asyncio.apply()
 
     uvicorn.run(app, host="0.0.0.0", port=PORT)
-    print("Server ready")
-    ngrok_tunnel = ngrok.connect(PORT)
-    print('TTS Server Public URL:', ngrok_tunnel.public_url)
+    # print("Server ready")
+    # ngrok_tunnel = ngrok.connect(PORT)
+    print('TTS Server Public URL:')
 
 

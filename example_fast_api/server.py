@@ -437,7 +437,7 @@ if __name__ == "__main__":
     _set_engine(START_ENGINE)
 
     ngrok_tunnel = ngrok.connect(8000)
-    print('Public URL:', ngrok_tunnel.public_url)
+    print('TTS Server:', ngrok_tunnel.public_url)
     nest_asyncio.apply()
 
 

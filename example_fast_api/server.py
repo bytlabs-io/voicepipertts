@@ -5,7 +5,7 @@ from pyngrok import ngrok
 
 
 parser = argparse.ArgumentParser(description="Run the TTS FastAPI server.")
-parser.add_argument("-p", "--port", type=int, default=int(os.environ.get("TTS_FASTAPI_PORT", 8000)),
+parser.add_argument("-p", "--port", type=int, default=int(os.environ.get("TTS_FASTAPI_PORT", 8003)),
                     help="Port to run the FastAPI server on (default: 8000 or TTS_FASTAPI_PORT env var).")
 parser.add_argument('-D', '--debug', action='store_true', help='Enable debug logging for detailed server operations')
 
@@ -435,7 +435,6 @@ if __name__ == "__main__":
             logging.error(f"Error retrieving voices for {_engine}: {str(e)}")
 
     _set_engine(START_ENGINE)
-    print("after engine set")
 
     ngrok_tunnel = ngrok.connect(PORT)
     print('TTS Server Public URL:', ngrok_tunnel.public_url)

@@ -417,7 +417,11 @@ if __name__ == "__main__":
 
         if "coqui" == engine_name:
             print("Initializing coqui engine")
-            engines["coqui"] = CoquiEngine()
+            coqui_model_path = os.environ.get("COQUI_MODEL_PATH")
+            coqui_config_path = os.environ.get("COQUI_CONFIG_PATH")
+            engines["coqui"] = CoquiEngine(
+                model_path=coqui_model_path, config_path=coqui_config_path
+            )
         if "openai" == engine_name:
             print("Initializing openai engine")
             engines["openai"] = OpenAIEngine()

@@ -201,7 +201,8 @@ class CoquiEngine(BaseEngine):
         self.voices_path = voices_path
 
         # download coqui model
-        self.model_path = None
+        self.model_path = model_path
+        self.config_path = config_path
         # if not self.specific_model:
         #     from TTS.utils.manage import ModelManager
 

@@ -424,8 +424,11 @@ if __name__ == "__main__":
         if "coqui" == engine_name:
             print("Initializing coqui engine")
             coqui_voice_path = os.environ.get("COQUI_VOICE_PATH")
+            coqui_voice_name = os.path.basename(coqui_voice_path)
+            coqui_voice_dir = os.path.dirname(coqui_voice_path)
             engines["coqui"] = CoquiEngine(
-                voice=coqui_voice_path
+                voice=coqui_voice_name,
+                voices_path=coqui_voice_dir
             )
 
         if "openai" == engine_name:

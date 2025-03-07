@@ -53,6 +53,8 @@ class CoquiVoice:
 class CoquiEngine(BaseEngine):
     def __init__(
         self,
+        model_path: str,
+        config_path: str,
         model_name="tts_models/tw_asante/openbible/vits",
         specific_model=None,
         local_models_path=None,
@@ -284,6 +286,8 @@ class CoquiEngine(BaseEngine):
                 self.load_balancing,
                 self.load_balancing_buffer_length,
                 self.load_balancing_cut_off,
+                self.model_path,
+                self.config_path
             ),
         )
         self.synthesize_process.start()
@@ -328,6 +332,8 @@ class CoquiEngine(BaseEngine):
         load_balancing,
         load_balancing_buffer_length,
         load_balancing_cut_off,
+        model_path,
+        config_path
     ):
         """
         Worker process for the coqui text to speech synthesis model.
@@ -553,14 +559,11 @@ class CoquiEngine(BaseEngine):
                     else "cpu"
                 )
 
-                model_path = "/kaggle/working/vits-akan/model.pth"
-                config_path = os.path.join(checkpoint, "config.json")
-                tts_speakers_file = os.path.join(checkpoint, "speakers.pth")
                 
                 tts = Synthesizer(
                     tts_checkpoint=model_path,
                     tts_config_path=config_path,
-                    tts_speakers_file=tts_speakers_file,
+                    # tts_speakers_file=None,
                     # tts_languages_file=None,
                     # vocoder_checkpoint=None,
                     # vocoder_config=None,
@@ -569,9 +572,9 @@ class CoquiEngine(BaseEngine):
                     use_cuda=True,
                 )
                 
-                logging.debug(f" load_checkpoint({checkpoint})")
+                logging.debug(f" load_checkpoint({model_path})")
             except Exception as e:
-                print(f"Error loading model for checkpoint {checkpoint}: {e}")
+                print(f"Error loading model for checkpoint {model_path}: {e}")
                 raise
             return tts
 
@@ -623,10 +626,10 @@ class CoquiEngine(BaseEngine):
             # Synthesize the full waveform using the existing tts method.
             full_wav = tts.tts(
                 text=text,
-                speaker="17",
-                speaker_idx="17",
-                language=language,
-                speaker_wav="/kaggle/input/testsp/speaker.wav",
+                # speaker="17",
+                # speaker_idx="17",
+                # language=language,
+                # speaker_wav="/kaggle/input/testsp/speaker.wav",
                 emotion=emotion,
                 split_sentences=split_sentences,
                 **kwargs,
@@ -673,15 +676,13 @@ class CoquiEngine(BaseEngine):
                 ans = Path.home().joinpath(".local/share")
             return ans.joinpath(appname)
 
-        logging.debug(f"Initializing coqui model {model_name}")
+        logging.debug(f"Initializing coqui model {model_path if model_path else model_name}")
         logging.debug(f" - cloning reference {cloning_reference_wav}")
         logging.debug(f" - language {language}")
         logging.debug(f" - local model path {local_model_path}")
 
         try:
-            checkpoint = local_model_path
-            logging.debug(f" - checkpoint {checkpoint}")
-            tts = load_model("/kaggle/working/vits-akan", tts)
+            tts = load_model(local_model_path, tts)
 
             # gpt_cond_latent, speaker_embedding = get_conditioning_latents(
             #     cloning_reference_wav, tts
@@ -730,6 +731,7 @@ class CoquiEngine(BaseEngine):
 
                 elif command == "set_model":
                     checkpoint = data["checkpoint"]
+                    # edit data to pass the model_path and config_path to be used by load_model
                     logging.info(f"Updating model checkpoint to {checkpoint}")
                     tts = load_model(checkpoint, tts)
                     conn.send(("success", "Model updated successfully"))
